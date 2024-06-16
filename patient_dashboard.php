@@ -1,15 +1,22 @@
 <?php
+// Ξεκινάμε τη συνεδρία
 session_start();
+
+// Ελέγχουμε αν ο χρήστης είναι συνδεδεμένος
 if (!isset($_SESSION['email'])) {
+    // Αν ο χρήστης δεν είναι συνδεδεμένος, ανακατευθύνουμε στη σελίδα σύνδεσης
     header('Location: login.php');
     exit();
 }
 
+// Συμπεριλαμβάνουμε το αρχείο σύνδεσης με τη βάση δεδομένων
 include 'db.php';
 
+// Παίρνουμε το email και τον ρόλο του χρήστη από τη συνεδρία
 $email = $_SESSION['email']; 
 $role = $_SESSION['role'];
 
+// Ετοιμάζουμε το SQL ερώτημα για να πάρουμε τα στοιχεία του χρήστη από τη βάση δεδομένων
 $sql = "SELECT * FROM users WHERE email = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $email);
@@ -17,6 +24,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
+// Κλείνουμε το statement και τη σύνδεση με τη βάση δεδομένων
 $stmt->close();
 $conn->close();
 ?>
@@ -49,4 +57,3 @@ $conn->close();
     </footer>
 </body>
 </html>
-

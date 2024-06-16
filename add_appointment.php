@@ -1,22 +1,24 @@
 <?php
-session_start();
+session_start(); // Έναρξη της συνεδρίας
 
+// Έλεγχος αν ο χρήστης είναι συνδεδεμένος και αν είναι γιατρός ή γραμματέας
 if (!isset($_SESSION['email']) || !in_array($_SESSION['role'], ['doctor', 'secretary'])) {
-    header('Location: login.php');
+    header('Location: login.php'); // Ανακατεύθυνση στη σελίδα σύνδεσης αν δεν πληρούνται οι προϋποθέσεις
     exit();
 }
 
-include 'db.php';
+include 'db.php'; // Συμπερίληψη του αρχείου για τη σύνδεση με τη βάση δεδομένων
 
+// Έλεγχος αν η μέθοδος αιτήματος είναι POST (δηλαδή, αν η φόρμα έχει υποβληθεί)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $patient_id = $_POST['patient_id'];
-    $time_slot_id = $_POST['time_slot_id'];
-    $description = $_POST['description'];
-    $status = 'Δημιουργημένο';
+    $patient_id = $_POST['patient_id']; // Λήψη του ID του ασθενή από τη φόρμα
+    $time_slot_id = $_POST['time_slot_id']; // Λήψη του ID του χρονικού διαστήματος από τη φόρμα
+    $description = $_POST['description']; // Λήψη της περιγραφής από τη φόρμα
+    $status = 'Δημιουργημένο'; // Καθορισμός της αρχικής κατάστασης του ραντεβού
 
-
+    // Έλεγχος αν όλα τα πεδία της φόρμας έχουν συμπληρωθεί
     if (!empty($patient_id) && !empty($time_slot_id) && !empty($description)) {
-       
+        // Προετοιμασία και εκτέλεση SQL εντολής για λήψη πληροφοριών για το χρονικό διάστημα
         $sql = "SELECT slot_start, slot_end, doctor_id FROM doctor_availability WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $time_slot_id);
@@ -25,9 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->fetch();
         $stmt->close();
 
-        $appointment_date = date('Y-m-d', strtotime($appointment_date_time));
-        $appointment_time = date('H:i:s', strtotime($appointment_date_time));
+        $appointment_date = date('Y-m-d', strtotime($appointment_date_time)); // Λήψη της ημερομηνίας του ραντεβού
+        $appointment_time = date('H:i:s', strtotime($appointment_date_time)); // Λήψη της ώρας του ραντεβού
 
+        // Προετοιμασία και εκτέλεση SQL εντολής για έλεγχο ύπαρξης άλλου ραντεβού για τον ίδιο γιατρό και την ίδια ώρα
         $sql = "SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != 'Ακυρωμένο'";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("iss", $doctor_id, $appointment_date, $appointment_time);
@@ -36,33 +39,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->fetch();
         $stmt->close();
 
+        // Έλεγχος αν δεν υπάρχει ήδη ραντεβού την ίδια ώρα για τον ίδιο γιατρό
         if ($existing_appointments_count == 0) {
+            // Προετοιμασία και εκτέλεση SQL εντολής για προσθήκη του νέου ραντεβού
             $sql = "INSERT INTO appointments (patient_id, appointment_date, appointment_time, description, status, doctor_id, time_slot_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("issssii", $patient_id, $appointment_date, $appointment_time, $description, $status, $doctor_id, $time_slot_id);
             if ($stmt->execute()) {
-                header('Location: manage_appointments.php');
+                header('Location: manage_appointments.php'); // Ανακατεύθυνση στη σελίδα διαχείρισης ραντεβού
                 exit();
             } else {
-                echo "Σφάλμα κατά την προσθήκη του ραντεβού: " . $stmt->error;
+                echo "Σφάλμα κατά την προσθήκη του ραντεβού: " . $stmt->error; // Εμφάνιση μηνύματος σφάλματος αν αποτύχει η εκτέλεση
             }
         } else {
-            echo "Υπάρχει ήδη ραντεβού για τον συγκεκριμένο γιατρό την επιλεγμένη ώρα.";
+            echo "Υπάρχει ήδη ραντεβού για τον συγκεκριμένο γιατρό την επιλεγμένη ώρα."; // Εμφάνιση μηνύματος αν υπάρχει ήδη ραντεβού
         }
     } else {
-        echo "Παρακαλώ συμπληρώστε όλα τα πεδία.";
+        echo "Παρακαλώ συμπληρώστε όλα τα πεδία."; // Εμφάνιση μηνύματος αν δεν έχουν συμπληρωθεί όλα τα πεδία
     }
 }
 
-
+// Προετοιμασία και εκτέλεση SQL εντολής για λήψη των ασθενών
 $sql_patients = "SELECT id, full_name FROM users WHERE role = 'patient'";
 $patients_result = $conn->query($sql_patients);
 
-
+// Προετοιμασία και εκτέλεση SQL εντολής για λήψη των γιατρών
 $sql_doctors = "SELECT id, full_name, specialty FROM users WHERE role = 'doctor'";
 $doctors_result = $conn->query($sql_doctors);
 
-$conn->close();
+$conn->close(); // Κλείσιμο της σύνδεσης με τη βάση δεδομένων
 ?>
 
 <!DOCTYPE html>
@@ -71,9 +76,10 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Προσθήκη Ραντεβού</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="styles.css"> <!-- Συμπερίληψη του αρχείου CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> <!-- Συμπερίληψη της βιβλιοθήκης jQuery -->
     <script>
+        // jQuery script για φόρτωση διαθέσιμων χρονικών διαστημάτων ανάλογα με τον γιατρό που επιλέχθηκε
         $(document).ready(function() {
             $('#doctor_id').change(function() {
                 var doctorId = $(this).val();

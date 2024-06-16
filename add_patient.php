@@ -1,41 +1,45 @@
 <?php
-session_start();
+session_start(); // Έναρξη της συνεδρίας
 
+// Έλεγχος αν ο χρήστης είναι συνδεδεμένος και αν είναι γιατρός ή γραμματέας
 if (!isset($_SESSION['email']) || !in_array($_SESSION['role'], ['doctor', 'secretary'])) {
-    header('Location: login.php');
+    header('Location: login.php'); // Ανακατεύθυνση στη σελίδα σύνδεσης αν δεν πληρούνται οι προϋποθέσεις
     exit();
 }
 
-include 'db.php';
+include 'db.php'; // Συμπερίληψη του αρχείου για τη σύνδεση με τη βάση δεδομένων
 
+// Έλεγχος αν η μέθοδος αιτήματος είναι POST (δηλαδή, αν η φόρμα έχει υποβληθεί)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['username'];
-    $password =$_POST['password'];
-    $full_name = $_POST['full_name'];
-    $contact_information = $_POST['contact_information'];
-    $identity_number = $_POST['identity_number'];
-    $amka = $_POST['amka'];
+    $email = $_POST['username']; // Λήψη του ονόματος χρήστη από τη φόρμα
+    $password = $_POST['password']; // Λήψη του κωδικού από τη φόρμα
+    $full_name = $_POST['full_name']; // Λήψη του ονοματεπώνυμου από τη φόρμα
+    $contact_information = $_POST['contact_information']; // Λήψη των στοιχείων επικοινωνίας από τη φόρμα
+    $identity_number = $_POST['identity_number']; // Λήψη του αριθμού ταυτότητας από τη φόρμα
+    $amka = $_POST['amka']; // Λήψη του ΑΜΚΑ από τη φόρμα
 
-
+    // Προετοιμασία και εκτέλεση SQL εντολής για έλεγχο αν υπάρχει ήδη ο χρήστης με το συγκεκριμένο email
     $sql = "SELECT * FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
+    // Έλεγχος αν υπάρχει ήδη ο χρήστης με το συγκεκριμένο email
     if ($result->num_rows > 0) {
-        $error = "Το όνομα χρήστη υπάρχει ήδη.";
+        $error = "Το όνομα χρήστη υπάρχει ήδη."; // Ορισμός μηνύματος σφάλματος αν υπάρχει ήδη ο χρήστης
     } else {
+        // Προετοιμασία και εκτέλεση SQL εντολής για εισαγωγή του νέου ασθενή στη βάση δεδομένων
         $sql = "INSERT INTO users (email, password, full_name, contact_information, identity_number, amka, role) VALUES (?, ?, ?, ?, ?, ?, 'patient')";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ssssss", $email, $password, $full_name, $contact_information, $identity_number, $amka);
         $stmt->execute();
-        header('Location: manage_patients.php');
+        header('Location: manage_patients.php'); // Ανακατεύθυνση στη σελίδα διαχείρισης ασθενών
         exit();
     }
 }
 
-$conn->close();
+$conn->close(); // Κλείσιμο της σύνδεσης με τη βάση δεδομένων
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +48,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Προσθήκη Ασθενούς</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css"> <!-- Συμπερίληψη του αρχείου CSS -->
 </head>
 <body>
     <header>
@@ -69,9 +73,9 @@ $conn->close();
     <main>
         <h2>Φόρμα Προσθήκης Ασθενούς</h2>
         <?php if (isset($error)): ?>
-            <p style="color: red;"><?php echo $error; ?></p>
+            <p style="color: red;"><?php echo $error; ?></p> <!-- Εμφάνιση μηνύματος σφάλματος αν υπάρχει -->
         <?php endif; ?>
-        <form action="add_patient.php" method="post">
+        <form action="add_patient.php" method="post"> <!-- Φόρμα για την προσθήκη ασθενούς -->
             <label for="username">Όνομα Χρήστη:</label>
             <input type="text" id="username" name="username" required>
             
@@ -90,7 +94,7 @@ $conn->close();
             <label for="amka">ΑΜΚΑ:</label>
             <input type="text" id="amka" name="amka" required>
             
-            <button type="submit">Προσθήκη</button>
+            <button type="submit">Προσθήκη</button> <!-- Κουμπί υποβολής της φόρμας -->
         </form>
     </main>
     <footer>

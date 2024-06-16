@@ -1,23 +1,31 @@
 <?php
+// Ξεκινάμε τη συνεδρία
 session_start();
 
+// Ελέγχουμε αν ο χρήστης είναι συνδεδεμένος και αν ο ρόλος του είναι 'γιατρός'
 if (!isset($_SESSION['email']) || $_SESSION['role'] != 'doctor') {
+    // Αν ο χρήστης δεν είναι συνδεδεμένος ή δεν έχει τον κατάλληλο ρόλο, ανακατευθύνουμε στη σελίδα σύνδεσης
     header('Location: login.php');
     exit();
 }
 
+// Συμπεριλαμβάνουμε το αρχείο σύνδεσης με τη βάση δεδομένων
 include 'db.php';
 
-
+// Ελέγχουμε αν η φόρμα έχει υποβληθεί και αν ζητείται προσθήκη διαθεσιμότητας
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_availability'])) {
+    // Παίρνουμε τα δεδομένα από τη φόρμα
     $doctor_id = $_SESSION['user_id']; 
     $slot_start = $_POST['slot_start'];
+    // Υπολογίζουμε την ώρα λήξης του slot προσθέτοντας 30 λεπτά
     $slot_end = date('Y-m-d H:i:s', strtotime($slot_start . ' +30 minutes'));
 
+    // Ετοιμάζουμε το SQL ερώτημα για προσθήκη νέου slot διαθεσιμότητας στη βάση δεδομένων
     $sql = "INSERT INTO doctor_availability (doctor_id, slot_start, slot_end) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("iss", $doctor_id, $slot_start, $slot_end);
     if ($stmt->execute()) {
+        // Ανακατεύθυνση στη σελίδα διαχείρισης διαθεσιμότητας μετά την επιτυχή προσθήκη
         header('Location: manage_availability.php');
         exit();
     } else {
@@ -25,13 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_availability'])) {
     }
 }
 
-
+// Ελέγχουμε αν υπάρχει αίτημα διαγραφής διαθεσιμότητας
 if (isset($_GET['delete'])) {
+    // Παίρνουμε το ID του slot που θέλουμε να διαγράψουμε
     $slot_id = $_GET['delete'];
+    // Ετοιμάζουμε το SQL ερώτημα για διαγραφή του slot από τη βάση δεδομένων
     $sql = "DELETE FROM doctor_availability WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $slot_id);
     if ($stmt->execute()) {
+        // Ανακατεύθυνση στη σελίδα διαχείρισης διαθεσιμότητας μετά την επιτυχή διαγραφή
         header('Location: manage_availability.php');
         exit();
     } else {
@@ -39,7 +50,7 @@ if (isset($_GET['delete'])) {
     }
 }
 
-
+// Παίρνουμε όλα τα slots διαθεσιμότητας του γιατρού από τη βάση δεδομένων
 $doctor_id = $_SESSION['user_id']; 
 $sql = "SELECT * FROM doctor_availability WHERE doctor_id = ?";
 $stmt = $conn->prepare($sql);
@@ -47,6 +58,7 @@ $stmt->bind_param("i", $doctor_id);
 $stmt->execute();
 $availability = $stmt->get_result();
 
+// Κλείνουμε το statement και τη σύνδεση με τη βάση δεδομένων
 $stmt->close();
 $conn->close();
 ?>
@@ -97,7 +109,7 @@ $conn->close();
                 },
                 events: [
                     <?php
-               
+                    // Παίρνουμε τα δεδομένα για τα slots διαθεσιμότητας και τα προσθέτουμε στο ημερολόγιο
                     while ($slot = $availability->fetch_assoc()) {
                         echo '{
                             title: "Διαθέσιμο",
@@ -113,6 +125,3 @@ $conn->close();
     </script>
 </body>
 </html>
-
-
-

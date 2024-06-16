@@ -1,29 +1,36 @@
 <?php
+// Ξεκινάμε τη συνεδρία
 session_start();
 
+// Ελέγχουμε αν ο χρήστης είναι συνδεδεμένος και αν έχει τον κατάλληλο ρόλο (γιατρός ή γραμματέας)
 if (!isset($_SESSION['email']) || ($_SESSION['role'] != 'doctor' && $_SESSION['role'] != 'secretary')) {
+    // Αν ο χρήστης δεν είναι συνδεδεμένος ή δεν έχει τον κατάλληλο ρόλο, ανακατευθύνουμε στη σελίδα σύνδεσης
     header('Location: login.php');
     exit();
 }
 
+// Συμπεριλαμβάνουμε το αρχείο σύνδεσης με τη βάση δεδομένων
 include 'db.php';
 
-
+// Ελέγχουμε αν υπάρχει αίτημα διαγραφής ραντεβού
 if (isset($_GET['delete'])) {
+    // Παίρνουμε το ID του ραντεβού που θέλουμε να διαγράψουμε
     $appointment_id = $_GET['delete'];
+    // Ετοιμάζουμε το SQL ερώτημα για διαγραφή του ραντεβού από τη βάση δεδομένων
     $sql = "DELETE FROM appointments WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $appointment_id);
     $stmt->execute();
 }
 
-
+// Παίρνουμε όλα τα ραντεβού από τη βάση δεδομένων μαζί με τα στοιχεία του ασθενή και του γιατρού
 $sql = "SELECT a.*, p.full_name AS patient_name, d.full_name AS doctor_name, d.specialty AS doctor_specialty 
         FROM appointments a 
         JOIN users p ON a.patient_id = p.id 
         JOIN users d ON a.doctor_id = d.id";
 $result = $conn->query($sql);
 
+// Κλείνουμε τη σύνδεση με τη βάση δεδομένων
 $conn->close();
 ?>
 
@@ -95,11 +102,3 @@ $conn->close();
     </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-

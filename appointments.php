@@ -1,17 +1,22 @@
 <?php
+// Ξεκινάμε τη συνεδρία
 session_start();
 
+// Ελέγχουμε αν ο χρήστης είναι συνδεδεμένος
 if (!isset($_SESSION['email'])) {
+    // Αν δεν είναι, ανακατευθύνουμε στη σελίδα σύνδεσης
     header('Location: login.php');
     exit();
 }
 
+// Συμπεριλαμβάνουμε το αρχείο σύνδεσης με τη βάση δεδομένων
 include 'db.php';
 
+// Παίρνουμε το email και το ρόλο του χρήστη από τη συνεδρία
 $email = $_SESSION['email'];
 $role = $_SESSION['role'];
 
-
+// Ετοιμάζουμε το SQL ερώτημα για να πάρουμε τα στοιχεία του χρήστη από τη βάση δεδομένων
 $sql = "SELECT * FROM users WHERE email = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $email);
@@ -20,11 +25,14 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $patient_id = $user['id'];
 
+// Ελέγχουμε αν η φόρμα έχει υποβληθεί
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Παίρνουμε τα δεδομένα από τη φόρμα
     $doctor_id = $_POST['doctor_id'];
     $slot_id = $_POST['slot_id'];
     $description = $_POST['description'];
 
+    // Ετοιμάζουμε το SQL ερώτημα για να ελέγξουμε αν το επιλεγμένο slot είναι ακόμα διαθέσιμο
     $sql_slot = "SELECT * FROM doctor_availability WHERE id = ? AND slot_start > NOW()";
     $stmt_slot = $conn->prepare($sql_slot);
     $stmt_slot->bind_param("i", $slot_id);
@@ -32,11 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result_slot = $stmt_slot->get_result();
     $slot = $result_slot->fetch_assoc();
 
+    // Ελέγχουμε αν το slot είναι διαθέσιμο
     if ($slot) {
+        // Παίρνουμε την ημερομηνία και την ώρα του ραντεβού από το slot
         $appointment_date = date('Y-m-d', strtotime($slot['slot_start']));
         $appointment_time = date('H:i', strtotime($slot['slot_start']));
 
-    
+        // Ετοιμάζουμε το SQL ερώτημα για να ελέγξουμε αν υπάρχει ήδη ραντεβού για τον συγκεκριμένο γιατρό την επιλεγμένη ώρα
         $sql_check = "SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != 'Ακυρωμένο'";
         $stmt_check = $conn->prepare($sql_check);
         $stmt_check->bind_param("iss", $doctor_id, $appointment_date, $appointment_time);
@@ -45,12 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt_check->fetch();
         $stmt_check->close();
 
+        // Ελέγχουμε αν δεν υπάρχει ήδη ραντεβού την επιλεγμένη ώρα
         if ($existing_appointments_count == 0) {
+            // Ορίζουμε την κατάσταση του ραντεβού ως 'Δημιουργημένο'
             $status = 'Δημιουργημένο';
+            // Ετοιμάζουμε το SQL ερώτημα για να προσθέσουμε το νέο ραντεβού στη βάση δεδομένων
             $sql = "INSERT INTO appointments (patient_id, appointment_date, appointment_time, description, status, doctor_id) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("issssi", $patient_id, $appointment_date, $appointment_time, $description, $status, $doctor_id);
             if ($stmt->execute()) {
+                // Ανακατεύθυνση στη σελίδα των ραντεβού μετά την επιτυχή προσθήκη
                 header('Location: appointments.php');
                 exit();
             } else {
@@ -66,17 +80,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt_slot->close();
 }
 
-
+// Ετοιμάζουμε το SQL ερώτημα για να πάρουμε τα ραντεβού του ασθενή από τη βάση δεδομένων
 $sql = "SELECT a.*, d.full_name AS doctor_name FROM appointments a JOIN users d ON a.doctor_id = d.id WHERE a.patient_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $patient_id);
 $stmt->execute();
 $appointments = $stmt->get_result();
 
-
+// Ετοιμάζουμε το SQL ερώτημα για να πάρουμε όλους τους γιατρούς από τη βάση δεδομένων
 $sql_doctors = "SELECT id, full_name, specialty FROM users WHERE role = 'doctor'";
 $doctors_result = $conn->query($sql_doctors);
 
+// Κλείνουμε το statement και τη σύνδεση με τη βάση δεδομένων
 $stmt->close();
 $conn->close();
 ?>
@@ -89,6 +104,7 @@ $conn->close();
     <title>Τα Ραντεβού Μου</title>
     <link rel="stylesheet" href="styles.css">
     <script>
+        // Συνάρτηση για φόρτωση διαθέσιμων slots για τον επιλεγμένο γιατρό
         function loadAvailableSlots(doctorId) {
             fetch('fetch_slots.php', {
                 method: 'POST',

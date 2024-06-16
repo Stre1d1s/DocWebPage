@@ -1,8 +1,9 @@
 <?php
-session_start();
+session_start(); // Έναρξη της συνεδρίας
 
+// Έλεγχος αν ο χρήστης είναι συνδεδεμένος και αν είναι γιατρός
 if (!isset($_SESSION['email']) || $_SESSION['role'] != 'doctor') {
-    header('Location: login.php');
+    header('Location: login.php'); // Ανακατεύθυνση στη σελίδα σύνδεσης αν δεν πληρούνται οι προϋποθέσεις
     exit();
 }
 ?>
@@ -13,7 +14,7 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] != 'doctor') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Πίνακας Ελέγχου Γιατρού</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css"> <!-- Συμπερίληψη του αρχείου CSS -->
 </head>
 <body>
     <header>
@@ -46,5 +47,3 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] != 'doctor') {
     </footer>
 </body>
 </html>
-
-

@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Έλεγχος αν ο χρήστης έχει συνδεθεί, αν όχι ανακατεύθυνση στη σελίδα εισόδου
 if (!isset($_SESSION['email'])) {
     header('Location: login.php');
     exit();
@@ -8,10 +9,10 @@ if (!isset($_SESSION['email'])) {
 
 include 'db.php';
 
-$email = isset($_SESSION['email']) ? $_SESSION['email'] : '';
-$role = isset($_SESSION['role']) ? $_SESSION['role'] : '';
+$email = $_SESSION['email'] ?? '';
+$role = $_SESSION['role'] ?? '';
 
-
+// Ανάκτηση στοιχείων χρήστη
 $sql = "SELECT * FROM users WHERE email = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $email);
@@ -20,10 +21,10 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $patient_id = $user['id'];
 
-
 if (isset($_GET['id'])) {
     $appointment_id = $_GET['id'];
 
+    // Έλεγχος αν ο χρήστης είναι γραμματέας ή γιατρός για διαφορετικά ερωτήματα SQL
     if ($role == 'secretary' || $role == 'doctor') {
         $sql = "SELECT * FROM appointments WHERE id = ?";
         $stmt = $conn->prepare($sql);
@@ -38,6 +39,7 @@ if (isset($_GET['id'])) {
     $result = $stmt->get_result();
     $appointment = $result->fetch_assoc();
 
+    // Έλεγχος αν το ραντεβού βρέθηκε
     if (!$appointment) {
         echo "Το ραντεβού δεν βρέθηκε.";
         exit();
@@ -49,6 +51,7 @@ if (isset($_GET['id'])) {
         $description = $_POST['description'];
         $status = $_POST['status'];
 
+        // Έλεγχος αν όλα τα πεδία είναι συμπληρωμένα
         if (!empty($patient_id) && !empty($time_slot_id) && !empty($description) && !empty($status)) {
             $sql = "SELECT slot_start, slot_end, doctor_id FROM doctor_availability WHERE id = ?";
             $stmt = $conn->prepare($sql);
@@ -61,6 +64,7 @@ if (isset($_GET['id'])) {
             $appointment_date = date('Y-m-d', strtotime($appointment_date_time));
             $appointment_time = date('H:i:s', strtotime($appointment_date_time));
 
+            // Έλεγχος αν υπάρχει ήδη ραντεβού για τον γιατρό την επιλεγμένη ώρα
             $sql = "SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND appointment_date = ? AND appointment_time = ? AND status != 'Ακυρωμένο' AND id != ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("issi", $doctor_id, $appointment_date, $appointment_time, $appointment_id);
@@ -74,7 +78,7 @@ if (isset($_GET['id'])) {
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("issssiii", $patient_id, $appointment_date, $appointment_time, $description, $status, $doctor_id, $time_slot_id, $appointment_id);
                 if ($stmt->execute()) {
-                    header('Location: manage_appointments.php');
+                    header('Location: appointments.php');
                     exit();
                 } else {
                     echo "Σφάλμα κατά την επεξεργασία του ραντεβού: " . $stmt->error;
@@ -91,17 +95,16 @@ if (isset($_GET['id'])) {
     exit();
 }
 
-
+// Ανάκτηση λίστας ασθενών
 $sql_patients = "SELECT id, full_name FROM users WHERE role = 'patient'";
 $patients_result = $conn->query($sql_patients);
 
-
+// Ανάκτηση λίστας γιατρών
 $sql_doctors = "SELECT id, full_name, specialty FROM users WHERE role = 'doctor'";
 $doctors_result = $conn->query($sql_doctors);
 
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -133,12 +136,11 @@ $conn->close();
                     data: { doctor_id: doctorId },
                     dataType: 'json',
                     success: function(response) {
-                        console.log(response); 
                         var timeSlotSelect = $('#time_slot_id');
                         timeSlotSelect.empty();
                         timeSlotSelect.append('<option value="">Επιλέξτε ώρα</option>');
                         if (response.error) {
-                            alert(response.error); 
+                            alert(response.error);
                         } else {
                             response.forEach(function(slot) {
                                 var selected = slot.id == '<?php echo $appointment['time_slot_id']; ?>' ? ' selected' : '';
