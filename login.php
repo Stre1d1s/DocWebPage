@@ -54,59 +54,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en" >
 <head>
     <!-- Ορισμός του συνόλου χαρακτήρων σε UTF-8 για την υποστήριξη ελληνικών χαρακτήρων -->
     <meta charset="UTF-8">
     <!-- Ρύθμιση της προβολής ώστε να είναι κατάλληλη για κινητές συσκευές -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Τίτλος της σελίδας -->
-    <title>Σύνδεση Χρήστη</title>
+    <title>Login - Health Clinic</title>
+    <link rel="shortcut icon" href="images/favicon.png" type="">
     <!-- Σύνδεση με το εξωτερικό αρχείο στυλ -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./css/styles.css">
+
 </head>
 <body>
-    <!-- Επικεφαλίδα της σελίδας -->
-    <header>
-        <!-- Κεντρικός τίτλος της σελίδας -->
-        <h1>Σύνδεση στο Ιατρείο</h1>
-        <!-- Πλοήγηση της σελίδας -->
-        <nav>
-            <ul>
-                <!-- Σύνδεσμοι προς άλλες σελίδες του ιστότοπου -->
-                <li><a href="index.php">Αρχική</a></li>
-                <li><a href="register.php">Εγγραφή</a></li>
-                <li><a href="login.php">Σύνδεση</a></li>
-            </ul>
-        </nav>
-    </header>
-    <!-- Κύριο περιεχόμενο της σελίδας -->
-    <main>
-        <!-- Ενότητα με τη φόρμα σύνδεσης -->
-        <section>
-            <h2>Φόρμα Σύνδεσης</h2>
+	<div class="main">  	
+		<div class="login">
             <!-- Εμφάνιση μηνύματος λάθους αν υπάρχει -->
             <?php if (!empty($error_message)): ?>
                 <p style="color: red;"><?php echo $error_message; ?></p>
             <?php endif; ?>
             <!-- Φόρμα σύνδεσης -->
-            <form action="login.php" method="post">
+			<form action="login.php" method="post">
+				<label>Sign in</label>
                 <!-- Πεδίο για το email -->
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-                
+				<input type="email" name="email" placeholder="Email" required>
                 <!-- Πεδίο για τον κωδικό -->
-                <label for="password">Κωδικός:</label>
-                <input type="password" id="password" name="password" required>
-                
+				<input type="password" name="password" placeholder="Password" required>
                 <!-- Κουμπί υποβολής της φόρμας -->
-                <button type="submit">Σύνδεση</button>
-            </form>
-        </section>
-    </main>
+				<button type="submit">Sign in</button>
+			</form>
+		</div>
+	</div>
     <!-- Υποσέλιδο της σελίδας -->
-    <footer>
-        <p>&copy; 2024 Ιατρείο. Όλα τα δικαιώματα κατοχυρωμένα.</p>
-    </footer>
+	<footer>
+		&copy; <span id="displayYear"></span> All Rights Reserved 2024
+	</footer>
 </body>
 </html>

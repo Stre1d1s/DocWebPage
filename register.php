@@ -51,52 +51,31 @@ $conn->close();
 ?>
 
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en" >
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Εγγραφή Χρήστη</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <title>Register - Health Clinic</title>
+  <link rel="shortcut icon" href="images/favicon.png" type="">
+  <link rel="stylesheet" href="./css/styles.css">
+
 </head>
 <body>
-    <header>
-        <h1>Εγγραφή στο Ιατρείο</h1>
-        <nav>
-            <ul>
-                <li><a href="index.php">Αρχική</a></li>
-                <li><a href="register.php">Εγγραφή</a></li>
-                <li><a href="login.php">Σύνδεση</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Φόρμα Εγγραφής</h2>
-            <form action="register.php" method="post">
-                <label for="full_name">Ονοματεπώνυμο:</label>
-                <input type="text" id="full_name" name="full_name" required>
-                
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-                
-                <label for="password">Κωδικός:</label>
-                <input type="password" id="password" name="password" required>
-                
-                <label for="identity_number">Αριθμός Ταυτότητας:</label>
-                <input type="text" id="identity_number" name="identity_number" required>
-                
-                <label for="amka">ΑΜΚΑ:</label>
-                <input type="text" id="amka" name="amka" required>
-                
-                <label for="contact_information">Στοιχεία Επικοινωνίας:</label>
-                <input type="text" id="contact_information" name="contact_information" required>
-                
-                <button type="submit">Εγγραφή</button>
-            </form>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 Ιατρείο. Όλα τα δικαιώματα κατοχυρωμένα.</p>
-    </footer>
+	<div class="main">  	
+		<div class="signup">
+			<form action="register.php" method="post">
+				<label>Sign up</label>
+				<input type="text" name="full_name" placeholder="Full Name" required>
+				<input type="email" name="email" placeholder="Email" required>
+				<input type="password" name="password" placeholder="Password" required>
+				<input type="text" name="identity_number" placeholder="ID number" required>
+				<input type="text" name="amka" placeholder="AMKA" required>
+				<input type="text" name="contact_information" placeholder="Contact Details" required>
+				<button type="submit">Sign up</button>
+			</form>
+		</div>
+	</div>
+	<footer>
+		&copy; <span id="displayYear"></span> All Rights Reserved 2024
+	</footer>
 </body>
 </html>
